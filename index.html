@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUU Transit DSS - ระบบตัวช่วยตัดสินใจการเดินทาง ม.บูรพา</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        buu: {
+                            yellow: '#FFB800',
+                            yellowDark: '#E0A100',
+                            blue: '#0B2545',
+                            blueLight: '#134074',
+                            accent: '#F97316'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 flex flex-col justify-between selection:bg-amber-400 selection:text-slate-900">
+
+    <header class="bg-gradient-to-r from-buu-blue via-buu-blueLight to-slate-900 text-white shadow-xl sticky top-0 z-50 border-b border-amber-400/20">
+        <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-buu-yellow text-slate-900 p-2.5 rounded-2xl shadow-lg font-bold flex items-center justify-center">
+                    <i class="fa-solid fa-bus text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-wide leading-tight">BUU Transit DSS</h1>
+                    <p class="text-xs text-amber-300 font-medium">ระบบอัจฉริยะช่วยตัดสินใจการเดินทาง ม.บูรพา</p>
+                </div>
+            </div>
+            <div class="hidden md:flex items-center space-x-2 text-xs bg-white/10 px-3 py-1.5 rounded-full border border-white/15">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <span class="font-medium">สถานะระบบ: รถสวัสดิการให้บริการปกติ (สายสีน้ำเงิน & สีเขียว)</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-8">
+        
+        <!-- Hero Banner -->
+        <div class="bg-gradient-to-r from-blue-900 via-buu-blueLight to-amber-600 rounded-3xl p-6 md:p-8 text-white shadow-2xl mb-8 relative overflow-hidden">
+            <div class="absolute right-0 bottom-0 opacity-10 transform translate-x-6 translate-y-6 pointer-events-none">
+                <i class="fa-solid fa-map-location-dot text-[14rem]"></i>
+            </div>
+            <div class="relative z-10 max-w-2xl">
+                <span class="bg-amber-400 text-slate-900 font-bold text-xs px-3.5 py-1.5 rounded-full uppercase tracking-wider mb-3 inline-block shadow">
+                    <i class="fa-solid fa-route mr-1"></i> Smart Campus Mobility
+                </span>
+                <h2 class="text-2xl md:text-4xl font-extrabold mb-3 leading-tight">วางแผนการเดินทางใน ม.บูรพา อย่างไรให้ไม่พลาดคลาส</h2>
+                <p class="text-white/90 text-sm md:text-base leading-relaxed">
+                    เบื่อรถบัสแน่น? กลัวไปเรียนสาย? เลือกจุดเริ่มต้นและปลายทางของคุณ พร้อมบอกระดับความเร่งด่วน ระบบจะคำนวณและแนะนำทางเลือกที่ดีที่สุดหลีกเลี่ยงความแออัดทันที
+                </p>
+            </div>
+        </div>
+
+        <!-- Decision Form Section -->
+        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 md:p-8 mb-10">
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center">
+                    <i class="fa-solid fa-sliders text-amber-500 mr-2 text-xl"></i> กำหนดเงื่อนไขการเดินทาง
+                </h3>
+                <button type="button" onclick="resetForm()" class="text-xs text-slate-400 hover:text-slate-600 font-medium transition">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> ล้างค่า
+                </button>
+            </div>
+
+            <form id="transitForm" onsubmit="calculateRoute(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    
+                    <!-- Origin Selection -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">
+                            <i class="fa-solid fa-location-dot text-emerald-600 mr-1.5"></i> จุดเริ่มต้น (Origin) <span class="text-rose-500">*</span>
+                        </label>
+                        <select id="origin" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition shadow-sm">
+                            <option value="" disabled selected>-- เลือกอาคาร / หอพัก / คณะต้นทาง --</option>
+                            <optgroup label="🏠 โซนหอพักนิสิตภายในมหาวิทยาลัย">
+                                <option value="หอพักเทาทอง 1">หอพักเทาทอง 1</option>
+                                <option value="หอพักเทาทอง 2">หอพักเทาทอง 2</option>
+                                <option value="หอพักเทาทอง 3">หอพักเทาทอง 3</option>
+                                <option value="หอพักเทาทอง 4">หอพักเทาทอง 4</option>
+                                <option value="หอพักนิสิตอื่นๆ ภายในมอ">หอพักนิสิตอื่นๆ ภายในมหาวิทยาลัย</option>
+                            </optgroup>
+                            <optgroup label="🏛️ กลุ่มอาคารบริหารและส่วนกลาง">
+                                <option value="สำนักงานอธิการบดี">สำนักงานอธิการบดี</option>
+                                <option value="หอประชุมธำรงบัวศรี">หอประชุมธำรงบัวศรี</option>
+                                <option value="สำนักหอสมุด">สำนักหอสมุด (ห้องสมุดกลาง)</option>
+                                <option value="สำนักคอมพิวเตอร์">สำนักคอมพิวเตอร์ / อาคารเทคโนโลยีสารสนเทศ</option>
+                                <option value="สถาบันวิทยาศาสตร์ทางทะเล">สถาบันวิทยาศาสตร์ทางทะเล (พิพิธภัณฑ์สัตว์น้ำบางแสน)</option>
+                                <option value="หอศิลปะและวัฒนธรรมภาคตะวันออก">หอศิลปะและวัฒนธรรมภาคตะวันออก</option>
+                                <option value="โรงอาหารยูเนี่ยน / ลานกิจกรรม">โรงอาหารยูเนี่ยน / ลานกิจกรรมกลาง</option>
+                            </optgroup>
+                            <optgroup label="🩺 กลุ่มคณะสายวิทยาศาสตร์สุขภาพ">
+                                <option value="คณะแพทยศาสตร์">คณะแพทยศาสตร์ (รวมอาคารศรีนครินทร์)</option>
+                                <option value="คณะพยาบาลศาสตร์">คณะพยาบาลศาสตร์</option>
+                                <option value="คณะสาธารณสุขศาสตร์">คณะสาธารณสุขศาสตร์</option>
+                                <option value="คณะสหเวชศาสตร์">คณะสหเวชศาสตร์</option>
+                                <option value="คณะเภสัชศาสตร์">คณะเภสัชศาสตร์</option>
+                                <option value="คณะวิทยาศาสตร์การกีฬา">คณะวิทยาศาสตร์การกีฬา</option>
+                                <option value="คณะการแพทย์แผนไทยอภัยภูเบศร">คณะการแพทย์แผนไทยอภัยภูเบศร</option>
+                                <option value="โรงพยาบาลมหาวิทยาลัยบูรพา">โรงพยาบาลมหาวิทยาลัยบูรพา</option>
+                            </optgroup>
+                            <optgroup label="🧪 กลุ่มคณะสายวิทยาศาสตร์และเทคโนโลยี">
+                                <option value="คณะวิทยาศาสตร์">คณะวิทยาศาสตร์</option>
+                                <option value="คณะวิศวกรรมศาสตร์">คณะวิศวกรรมศาสตร์</option>
+                                <option value="วิทยาการวิจัยและวิทยาการปัญญา">วิทยาการวิจัยและวิทยาการปัญญา</option>
+                                <option value="วิทยาลัยการขนส่งและโลจิสติกส์">วิทยาลัยการขนส่งและโลจิสติกส์</option>
+                            </optgroup>
+                            <optgroup label="📚 กลุ่มคณะสายมนุษยศาสตร์ สังคมศาสตร์ และบริหาร">
+                                <option value="คณะมนุษยศาสตร์และสังคมศาสตร์">คณะมนุษยศาสตร์และสังคมศาสตร์</option>
+                                <option value="คณะรัฐศาสตร์และนิติศาสตร์">คณะรัฐศาสตร์และนิติศาสตร์</option>
+                                <option value="คณะการจัดการและการท่องเที่ยว">คณะการจัดการและการท่องเที่ยว</option>
+                                <option value="วิทยาลัยการบริหารรัฐกิจ">วิทยาลัยการบริหารรัฐกิจ</option>
+                                <option value="วิทยาลัยพาณิชยศาสตร์">วิทยาลัยพาณิชยศาสตร์</option>
+                            </optgroup>
+                            <optgroup label="🎨 กลุ่มศิลปกรรม ดนตรี และวิทยาลัยนานาชาติ">
+                                <option value="คณะศิลปกรรมศาสตร์">คณะศิลปกรรมศาสตร์</option>
+                                <option value="คณะดนตรีและการแสดง">คณะดนตรีและการแสดง</option>
+                                <option value="วิทยาลัยนานาชาติ">วิทยาลัยนานาชาติ</option>
+                            </optgroup>
+                            <optgroup label="🏫 สถานศึกษาในสังกัดและโซนรอบมอ">
+                                <option value="โรงเรียนสาธิต 'พิบูลบำเพ็ญ'">โรงเรียนสาธิต "พิบูลบำเพ็ญ" ม.บูรพา</option>
+                                <option value="หอพักหลังมอ (ซอยมาลัยแมน/ป้ายลาย)">หอพักหลังมอ (ซอยมาลัยแมน / ป้ายลาย)</option>
+                                <option value="หอพักโซนสดใส">หอพักโซนสดใส</option>
+                                <option value="โซนถนนลงหาดบางแสน">โซนถนนลงหาดบางแสน</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <!-- Destination Selection -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">
+                            <i class="fa-solid fa-flag-checkered text-rose-500 mr-1.5"></i> ปลายทาง (Destination) <span class="text-rose-500">*</span>
+                        </label>
+                        <select id="destination" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition shadow-sm">
+                            <option value="" disabled selected>-- เลือกอาคาร / หอพัก / คณะปลายทาง --</option>
+                            <optgroup label="🏠 โซนหอพักนิสิตภายในมหาวิทยาลัย">
+                                <option value="หอพักเทาทอง 1">หอพักเทาทอง 1</option>
+                                <option value="หอพักเทาทอง 2">หอพักเทาทอง 2</option>
+                                <option value="หอพักเทาทอง 3">หอพักเทาทอง 3</option>
+                                <option value="หอพักเทาทอง 4">หอพักเทาทอง 4</option>
+                                <option value="หอพักนิสิตอื่นๆ ภายในมอ">หอพักนิสิตอื่นๆ ภายในมหาวิทยาลัย</option>
+                            </optgroup>
+                            <optgroup label="🏛️ กลุ่มอาคารบริหารและส่วนกลาง">
+                                <option value="สำนักงานอธิการบดี">สำนักงานอธิการบดี</option>
+                                <option value="หอประชุมธำรงบัวศรี">หอประชุมธำรงบัวศรี</option>
+                                <option value="สำนักหอสมุด">สำนักหอสมุด (ห้องสมุดกลาง)</option>
+                                <option value="สำนักคอมพิวเตอร์">สำนักคอมพิวเตอร์ / อาคารเทคโนโลยีสารสนเทศ</option>
+                                <option value="สถาบันวิทยาศาสตร์ทางทะเล">สถาบันวิทยาศาสตร์ทางทะเล (พิพิธภัณฑ์สัตว์น้ำบางแสน)</option>
+                                <option value="หอศิลปะและวัฒนธรรมภาคตะวันออก">หอศิลปะและวัฒนธรรมภาคตะวันออก</option>
+                                <option value="โรงอาหารยูเนี่ยน / ลานกิจกรรม">โรงอาหารยูเนี่ยน / ลานกิจกรรมกลาง</option>
+                            </optgroup>
+                            <optgroup label="🩺 กลุ่มคณะสายวิทยาศาสตร์สุขภาพ">
+                                <option value="คณะแพทยศาสตร์">คณะแพทยศาสตร์ (รวมอาคารศรีนครินทร์)</option>
+                                <option value="คณะพยาบาลศาสตร์">คณะพยาบาลศาสตร์</option>
+                                <option value="คณะสาธารณสุขศาสตร์">คณะสาธารณสุขศาสตร์</option>
+                                <option value="คณะสหเวชศาสตร์">คณะสหเวชศาสตร์</option>
+                                <option value="คณะเภสัชศาสตร์">คณะเภสัชศาสตร์</option>
+                                <option value="คณะวิทยาศาสตร์การกีฬา">คณะวิทยาศาสตร์การกีฬา</option>
+                                <option value="คณะการแพทย์แผนไทยอภัยภูเบศร">คณะการแพทย์แผนไทยอภัยภูเบศร</option>
+                                <option value="โรงพยาบาลมหาวิทยาลัยบูรพา">โรงพยาบาลมหาวิทยาลัยบูรพา</option>
+                            </optgroup>
+                            <optgroup label="🧪 กลุ่มคณะสายวิทยาศาสตร์และเทคโนโลยี">
+                                <option value="คณะวิทยาศาสตร์">คณะวิทยาศาสตร์</option>
+                                <option value="คณะวิศวกรรมศาสตร์">คณะวิศวกรรมศาสตร์</option>
+                                <option value="วิทยาการวิจัยและวิทยาการปัญญา">วิทยาการวิจัยและวิทยาการปัญญา</option>
+                                <option value="วิทยาลัยการขนส่งและโลจิสติกส์">วิทยาลัยการขนส่งและโลจิสติกส์</option>
+                            </optgroup>
+                            <optgroup label="📚 กลุ่มคณะสายมนุษยศาสตร์ สังคมศาสตร์ และบริหาร">
+                                <option value="คณะมนุษยศาสตร์และสังคมศาสตร์">คณะมนุษยศาสตร์และสังคมศาสตร์</option>
+                                <option value="คณะรัฐศาสตร์และนิติศาสตร์">คณะรัฐศาสตร์และนิติศาสตร์</option>
+                                <option value="คณะการจัดการและการท่องเที่ยว">คณะการจัดการและการท่องเที่ยว</option>
+                                <option value="วิทยาลัยการบริหารรัฐกิจ">วิทยาลัยการบริหารรัฐกิจ</option>
+                                <option value="วิทยาลัยพาณิชยศาสตร์">วิทยาลัยพาณิชยศาสตร์</option>
+                            </optgroup>
+                            <optgroup label="🎨 กลุ่มศิลปกรรม ดนตรี และวิทยาลัยนานาชาติ">
+                                <option value="คณะศิลปกรรมศาสตร์">คณะศิลปกรรมศาสตร์</option>
+                                <option value="คณะดนตรีและการแสดง">คณะดนตรีและการแสดง</option>
+                                <option value="วิทยาลัยนานาชาติ">วิทยาลัยนานาชาติ</option>
+                            </optgroup>
+                            <optgroup label="🏫 สถานศึกษาในสังกัดและโซนรอบมอ">
+                                <option value="โรงเรียนสาธิต 'พิบูลบำเพ็ญ'">โรงเรียนสาธิต "พิบูลบำเพ็ญ" ม.บูรพา</option>
+                                <option value="หอพักหลังมอ (ซอยมาลัยแมน/ป้ายลาย)">หอพักหลังมอ (ซอยมาลัยแมน / ป้ายลาย)</option>
+                                <option value="หอพักโซนสดใส">หอพักโซนสดใส</option>
+                                <option value="โซนถนนลงหาดบางแสน">โซนถนนลงหาดบางแสน</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                </div>
+
+                <!-- Urgency & Mode Conditions -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    
+                    <!-- Urgency -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">
+                            <i class="fa-solid fa-clock text-blue-600 mr-1.5"></i> ระดับความรีบ (Urgency Level)
+                        </label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <label class="border border-slate-200 rounded-2xl p-3.5 text-center cursor-pointer hover:bg-amber-50 hover:border-amber-400 transition flex flex-col items-center justify-center group">
+                                <input type="radio" name="urgency" value="ไม่รีบ" class="text-amber-500 focus:ring-amber-400 mb-1.5" checked>
+                                <span class="text-xs font-bold text-slate-700 group-hover:text-amber-700">ไม่รีบ</span>
+                                <span class="text-[10px] text-slate-400">ชิลๆ เดินได้</span>
+                            </label>
+                            <label class="border border-slate-200 rounded-2xl p-3.5 text-center cursor-pointer hover:bg-amber-50 hover:border-amber-400 transition flex flex-col items-center justify-center group">
+                                <input type="radio" name="urgency" value="ปานกลาง" class="text-amber-500 focus:ring-amber-400 mb-1.5">
+                                <span class="text-xs font-bold text-slate-700 group-hover:text-amber-700">ปานกลาง</span>
+                                <span class="text-[10px] text-slate-400">เวลาปกติ</span>
+                            </label>
+                            <label class="border border-slate-200 rounded-2xl p-3.5 text-center cursor-pointer hover:bg-amber-50 hover:border-amber-400 transition flex flex-col items-center justify-center group">
+                                <input type="radio" name="urgency" value="รีบมาก" class="text-amber-500 focus:ring-amber-400 mb-1.5">
+                                <span class="text-xs font-bold text-slate-700 group-hover:text-amber-700">รีบมาก</span>
+                                <span class="text-[10px] text-slate-400">มีสอบ/เข้าเรียนด่วน</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Available Personal Resources -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">
+                            <i class="fa-solid fa-person-biking text-emerald-600 mr-1.5"></i> พาหนะ / ความสามารถในการเดินทาง
+                        </label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <label class="border border-slate-200 rounded-2xl p-3.5 text-center cursor-pointer hover:bg-emerald-50 hover:border-emerald-400 transition flex flex-col items-center justify-center group">
+                                <input type="checkbox" id="hasMotorbike" value="มอเตอร์ไซค์" class="rounded text-emerald-600 focus:ring-emerald-500 mb-1.5">
+                                <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-700">มีมอเตอร์ไซค์</span>
+                                <span class="text-[10px] text-slate-400">ขับเองได้</span>
+                            </label>
+                            <label class="border border-slate-200 rounded-2xl p-3.5 text-center cursor-pointer hover:bg-emerald-50 hover:border-emerald-400 transition flex flex-col items-center justify-center group">
+                                <input type="checkbox" id="canWalk" value="เดินได้" class="rounded text-emerald-600 focus:ring-emerald-500 mb-1.5" checked>
+                                <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-700">เดินเท้าได้ดี</span>
+                                <span class="text-[10px] text-slate-400">ออกกำลังกาย</span>
+                            </label>
+                            <label class="border border-slate-200 rounded-2xl p-3.5 text-center cursor-pointer hover:bg-emerald-50 hover:border-emerald-400 transition flex flex-col items-center justify-center group">
+                                <input type="checkbox" id="canWaitBus" value="รอรถบัสได้" class="rounded text-emerald-600 focus:ring-emerald-500 mb-1.5" checked>
+                                <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-700">นั่งรถเหลือง</span>
+                                <span class="text-[10px] text-slate-400">สวัสดิการ มอ.</span>
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="w-full bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-slate-900 font-extrabold py-4 px-6 rounded-2xl shadow-xl shadow-amber-500/20 hover:opacity-95 transform active:scale-[0.99] transition flex items-center justify-center space-x-2.5 text-base">
+                    <i class="fa-solid fa-compass text-lg"></i>
+                    <span>ประมวลผลตัวช่วยตัดสินใจเส้นทาง (Generate Decision Support)</span>
+                </button>
+            </form>
+        </div>
+
+        <div id="resultsSection" class="hidden fade-in space-y-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between bg-white p-5 rounded-2xl shadow-md border border-slate-100 gap-3">
+                <div>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">เส้นทางที่คุณเลือก</span>
+                    <h3 id="resultRouteTitle" class="text-lg font-extrabold text-slate-800"></h3>
+                </div>
+                <div id="routeSummaryBadge" class="self-start md:self-auto bg-amber-100 text-amber-800 text-xs font-bold px-4 py-2 rounded-xl shadow-sm"></div>
+            </div>
+
+            <!-- Recommendation Grid -->
+            <div>
+                <h4 class="text-base font-bold text-slate-800 mb-4 flex items-center">
+                    <i class="fa-solid fa-star text-amber-500 mr-2"></i> ข้อเสนอแนะทางเลือกการเดินทางจัดเรียงตามความเหมาะสม
+                </h4>
+                <div id="recommendationCards" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Bus Lines Reference Guide -->
+            <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 md:p-8">
+                <h4 class="font-bold text-slate-800 text-base mb-4 flex items-center">
+                    <i class="fa-solid fa-circle-info text-blue-600 mr-2"></i> ข้อมูลเส้นทางรถสวัสดิการภายใน ม.บูรพา (รถเหลือง)
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    
+                    <div class="bg-blue-50/70 p-5 rounded-2xl border border-blue-100">
+                        <div class="flex items-center space-x-2.5 mb-2">
+                            <span class="w-4 h-4 rounded-full bg-blue-600 shadow-sm flex-shrink-0"></span>
+                            <span class="font-bold text-blue-900 text-base">สายสีน้ำเงิน (เส้นทางหลักหน้ามอ / หาดบางแสน)</span>
+                        </div>
+                        <p class="text-slate-600 text-xs leading-relaxed mb-3">
+                            วิ่งบริการรอบถนนสายหลักด้านหน้ามหาวิทยาลัย เชื่อมต่อโซนหอพักหน้ามอ ถนนลงหาดบางแสน และกลุ่มอาคารเรียนสายสังคมศาสตร์ มนุษยศาสตร์ และหอสมุดกลาง
+                        </p>
+                        <div class="text-[11px] text-blue-800 font-semibold bg-blue-100/60 p-2 rounded-xl">
+                            <i class="fa-solid fa-clock mr-1"></i> ความถี่: ทุกๆ 5-10 นาที (ช่วงพีคแน่นมาก)
+                        </div>
+                    </div>
+
+                    <div class="bg-emerald-50/70 p-5 rounded-2xl border border-emerald-100">
+                        <div class="flex items-center space-x-2.5 mb-2">
+                            <span class="w-4 h-4 rounded-full bg-emerald-500 shadow-sm flex-shrink-0"></span>
+                            <span class="font-bold text-emerald-900 text-base">สายสีเขียว (โซนหอพักหลังมอ / สดใส / ป้ายลาย)</span>
+                        </div>
+                        <p class="text-slate-600 text-xs leading-relaxed mb-3">
+                            วิ่งเจาะลึกโซนหอพักด้านหลังมหาวิทยาลัย (ซอยมาลัยแมน, สดใส, ป้ายลาย) ทะลุเข้าสู่ภายในมอผ่านคณะวิทยาศาสตร์ วิศวกรรมศาสตร์ และศูนย์กลางหอพักนิสิต
+                        </p>
+                        <div class="text-[11px] text-emerald-800 font-semibold bg-emerald-100/60 p-2 rounded-xl">
+                            <i class="fa-solid fa-clock mr-1"></i> ความถี่: ทุกๆ 7-12 นาที (หนาแน่นช่วงก่อนเข้าเรียน 08:00 น.)
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-16 py-8 text-center text-xs text-slate-500">
+        <div class="max-w-6xl mx-auto px-4">
+            <p class="font-bold text-slate-700 text-sm mb-1">Burapha University Campus Transit Decision Support System (BUU-DSS)</p>
+            <p>พัฒนาขึ้นเพื่อช่วยเหลือนิสิตและบุคลากร มหาวิทยาลัยบูรพา ในการบริหารเวลาเดินทางและลดความแออัดของระบบขนส่งสาธารณะภายใน</p>
+        </div>
+    </footer>
+
+    <script>
+        function resetForm() {
+            document.getElementById('transitForm').reset();
+            document.getElementById('resultsSection').classList.add('hidden');
+        }
+
+        function calculateRoute(e) {
+            e.preventDefault();
+
+            const origin = document.getElementById('origin').value;
+            const destination = document.getElementById('destination').value;
+            const urgency = document.querySelector('input[name="urgency"]:checked').value;
+            const hasMotorbike = document.getElementById('hasMotorbike').checked;
+            const canWalk = document.getElementById('canWalk').checked;
+            const canWaitBus = document.getElementById('canWaitBus').checked;
+
+            if (!origin || !destination) {
+                showModal('แจ้งเตือน', 'กรุณาเลือกจุดเริ่มต้นและปลายทางให้ครบถ้วนก่อนประมวลผล', 'warning');
+                return;
+            }
+
+            if (origin === destination) {
+                showModal('แจ้งเตือน', 'จุดเริ่มต้นและปลายทางเป็นสถานที่เดียวกัน กรุณาเลือกสถานที่ใหม่', 'warning');
+                return;
+            }
+
+            // Display results container & scroll
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.classList.remove('hidden');
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+
+            document.getElementById('resultRouteTitle').innerText = `${origin} ➔ ${destination}`;
+            document.getElementById('routeSummaryBadge').innerHTML = `<i class="fa-solid fa-bolt text-amber-600 mr-1"></i> เงื่อนไข: ${urgency}`;
+
+            const container = document.getElementById('recommendationCards');
+            container.innerHTML = '';
+
+            let options = [];
+
+            // 1. Motorbike option
+            if (hasMotorbike) {
+                options.push({
+                    title: 'ขี่มอเตอร์ไซค์ส่วนตัว',
+                    icon: 'fa-motorcycle',
+                    color: 'from-amber-500 to-orange-600',
+                    badge: 'เร็วที่สุด / อิสระสูง',
+                    time: '3 - 8 นาที',
+                    crowd: 'ต่ำ (ขับขี่เอง)',
+                    busLine: 'ไม่ใช้รถบัส',
+                    pros: 'สะดวกรวดเร็ว ไม่ต้องรอคิว หาที่จอดง่ายรอบคณะ',
+                    cons: 'ต้องระวังเรื่องสภาพอากาศ (แดด/ฝน)',
+                    score: 95
+                });
+            }
+
+            // 2. Yellow Bus option
+            if (canWaitBus) {
+                let isPeakUrgent = (urgency === 'รีบมาก');
+                options.push({
+                    title: 'นั่งรถสวัสดิการ ม.บูรพา (รถเหลือง)',
+                    icon: 'fa-bus',
+                    color: 'from-blue-600 to-indigo-700',
+                    badge: isPeakUrgent ? 'ไม่แนะนำ (ช่วงเร่งด่วนคนแน่น)' : 'ประหยัด / ยอดนิยม',
+                    time: '10 - 20 นาที (รวมเวลารอ)',
+                    crowd: isPeakUrgent ? 'หนาแน่นมาก (อาจต้องรอ 2 รอบ)' : 'ปานกลาง',
+                    busLine: 'สายสีน้ำเงิน หรือ สายสีเขียว',
+                    pros: 'บริการฟรี สะดวกปลอดภัย ไม่ต้องออกแรงเดิน',
+                    cons: 'ช่วงเปลี่ยนคาบเรียนคนจะแน่นมาก อาจขึ้นไม่ทันคันแรก',
+                    score: isPeakUrgent ? 40 : 85
+                });
+            }
+
+            // 3. Walking option
+            if (canWalk) {
+                let isLongDist = origin.includes('หลังมอ') || destination.includes('วิศวะ') || origin.includes('เทาทอง');
+                let walkTime = isLongDist ? '15 - 25 นาที' : '10 - 15 นาที';
+                options.push({
+                    title: 'เดินเท้าเพื่อสุขภาพ (Active Walking)',
+                    icon: 'fa-person-walking',
+                    color: 'from-emerald-600 to-teal-700',
+                    badge: urgency === 'รีบมาก' ? 'ใช้เวลาเดินทางนาน' : 'แนะนำสำหรับคนไม่รีบ',
+                    time: walkTime,
+                    crowd: 'ไม่มีความแออัด',
+                    pros: 'ได้ออกกำลังกาย เวลาแม่นยำแน่นอน ไม่หงุดหงิดเรื่องรถติด',
+                    cons: 'เหนื่อยและร้อนในช่วงกลางวัน',
+                    score: urgency === 'ไม่รีบ' ? 92 : (urgency === 'ปานกลาง' ? 65 : 45)
+                });
+            }
+
+            // 4. Motorcycle Win option (Always available backup)
+            options.push({
+                title: 'วินมอเตอร์ไซค์รับจ้าง (On-demand)',
+                icon: 'fa-vest',
+                color: 'from-orange-600 to-rose-600',
+                badge: 'รวดเร็ว ทันใจ',
+                time: '3 - 5 นาที',
+                crowd: 'ต่ำ',
+                pros: 'รวดเร็วมาก เหมาะสำหรับเวลาเร่งรีบหรือตื่นสาย',
+                cons: 'มีค่าใช้จ่ายตามระยะทาง',
+                score: urgency === 'รีบมาก' ? 98 : 75
+            });
+
+            // Sort options by matching score
+            options.sort((a, b) => b.score - a.score);
+
+            // Render option cards
+            options.forEach((opt, index) => {
+                const isTop = (index === 0);
+                const cardHTML = `
+                    <div class="bg-white rounded-3xl shadow-xl border ${isTop ? 'border-amber-400 ring-4 ring-amber-400/15' : 'border-slate-100'} p-6 flex flex-col justify-between transition hover:-translate-y-1">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br ${opt.color} text-white flex items-center justify-center shadow-md text-lg">
+                                    <i class="fa-solid ${opt.icon}"></i>
+                                </div>
+                                <span class="text-xs font-extrabold px-3 py-1 rounded-full ${isTop ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'}">
+                                    ${opt.badge}
+                                </span>
+                            </div>
+                            <h5 class="font-bold text-slate-800 text-base mb-1">${opt.title}</h5>
+                            <div class="space-y-1.5 my-3 text-xs text-slate-600 border-y border-slate-100 py-3">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">เวลาโดยประมาณ:</span>
+                                    <span class="font-bold text-slate-700">${opt.time}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">ระดับความแออัด:</span>
+                                    <span class="font-bold text-slate-700">${opt.crowd}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">สายรถบัส/เส้นทาง:</span>
+                                    <span class="font-bold text-blue-700">${opt.busLine}</span>
+                                </div>
+                            </div>
+                            <div class="bg-slate-50/80 rounded-2xl p-3.5 text-xs space-y-2 mb-5">
+                                <p class="text-emerald-700 font-medium"><i class="fa-solid fa-check mr-1.5"></i> ${opt.pros}</p>
+                                <p class="text-rose-600 font-medium"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i> ${opt.cons}</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="selectRouteAction('${opt.title}')" class="w-full py-3 bg-slate-100 hover:bg-slate-900 hover:text-white text-slate-700 font-bold rounded-2xl text-xs transition shadow-sm">
+                            เลือกเส้นทางนี้
+                        </button>
+                    </div>
+                `;
+                container.innerHTML += cardHTML;
+            });
+        }
+
+        function showModal(title, message, type) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 fade-in';
+            modal.innerHTML = `
+                <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-100">
+                    <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                    </div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-1">${title}</h3>
+                    <p class="text-xs text-slate-600 mb-6 leading-relaxed">${message}</p>
+                    <button type="button" onclick="this.closest('.fixed').remove()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3 rounded-2xl text-xs shadow-md transition">
+                        รับทราบ
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function selectRouteAction(title) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 fade-in';
+            modal.innerHTML = `
+                <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-100">
+                    <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-1">บันทึกแผนเดินทางสำเร็จ</h3>
+                    <p class="text-xs text-slate-600 mb-6 leading-relaxed">คุณเลือกเดินทางด้วย <span class="font-bold text-amber-600">${title}</span> ขอให้เดินทางไปเรียนอย่างปลอดภัยและมีความสุขครับ!</p>
+                    <button type="button" onclick="this.closest('.fixed').remove()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-2xl text-xs shadow-md transition">
+                        ตกลง
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+    </script>
+</body>
+</html>
