@@ -101,7 +101,7 @@
                         <label class="block text-sm font-bold text-slate-700 mb-2">
                             <i class="fa-solid fa-location-dot text-emerald-600 mr-1.5"></i> จุดเริ่มต้น (Origin) <span class="text-rose-500">*</span>
                         </label>
-                        <select id="origin" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition shadow-sm">
+                        <select id="origin" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition shadow-sm">
                             <option value="" disabled selected>-- เลือกอาคาร / หอพัก / คณะต้นทาง --</option>
                             <optgroup label="🏠 โซนหอพักนิสิตภายในมหาวิทยาลัย">
                                 <option value="หอพักเทาทอง 1">หอพักเทาทอง 1</option>
@@ -161,7 +161,7 @@
                         <label class="block text-sm font-bold text-slate-700 mb-2">
                             <i class="fa-solid fa-flag-checkered text-rose-500 mr-1.5"></i> ปลายทาง (Destination) <span class="text-rose-500">*</span>
                         </label>
-                        <select id="destination" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition shadow-sm">
+                        <select id="destination" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition shadow-sm">
                             <option value="" disabled selected>-- เลือกอาคาร / หอพัก / คณะปลายทาง --</option>
                             <optgroup label="🏠 โซนหอพักนิสิตภายในมหาวิทยาลัย">
                                 <option value="หอพักเทาทอง 1">หอพักเทาทอง 1</option>
@@ -419,7 +419,9 @@
 
             // 3. Walking option
             if (canWalk) {
-                let isLongDist = origin.includes('หลังมอ') || destination.includes('วิศวะ') || origin.includes('เทาทอง');
+                let isLongDist = origin.includes('หลังมอ') || destination.includes('หลังมอ') ||
+                                  origin.includes('วิศวกรรม') || destination.includes('วิศวกรรม') ||
+                                  origin.includes('เทาทอง') || destination.includes('เทาทอง');
                 let walkTime = isLongDist ? '15 - 25 นาที' : '10 - 15 นาที';
                 options.push({
                     title: 'เดินเท้าเพื่อสุขภาพ (Active Walking)',
@@ -428,6 +430,7 @@
                     badge: urgency === 'รีบมาก' ? 'ใช้เวลาเดินทางนาน' : 'แนะนำสำหรับคนไม่รีบ',
                     time: walkTime,
                     crowd: 'ไม่มีความแออัด',
+                    busLine: 'ไม่ใช้รถบัส',
                     pros: 'ได้ออกกำลังกาย เวลาแม่นยำแน่นอน ไม่หงุดหงิดเรื่องรถติด',
                     cons: 'เหนื่อยและร้อนในช่วงกลางวัน',
                     score: urgency === 'ไม่รีบ' ? 92 : (urgency === 'ปานกลาง' ? 65 : 45)
@@ -442,6 +445,7 @@
                 badge: 'รวดเร็ว ทันใจ',
                 time: '3 - 5 นาที',
                 crowd: 'ต่ำ',
+                busLine: 'ไม่ใช้รถบัส',
                 pros: 'รวดเร็วมาก เหมาะสำหรับเวลาเร่งรีบหรือตื่นสาย',
                 cons: 'มีค่าใช้จ่ายตามระยะทาง',
                 score: urgency === 'รีบมาก' ? 98 : 75
@@ -451,6 +455,7 @@
             options.sort((a, b) => b.score - a.score);
 
             // Render option cards
+            const cardsHTML = [];
             options.forEach((opt, index) => {
                 const isTop = (index === 0);
                 const cardHTML = `
@@ -476,7 +481,7 @@
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-slate-400">สายรถบัส/เส้นทาง:</span>
-                                    <span class="font-bold text-blue-700">${opt.busLine}</span>
+                                    <span class="font-bold text-blue-700">${opt.busLine || '-'}</span>
                                 </div>
                             </div>
                             <div class="bg-slate-50/80 rounded-2xl p-3.5 text-xs space-y-2 mb-5">
@@ -489,8 +494,9 @@
                         </button>
                     </div>
                 `;
-                container.innerHTML += cardHTML;
+                cardsHTML.push(cardHTML);
             });
+            container.innerHTML = cardsHTML.join('');
         }
 
         function showModal(title, message, type) {
